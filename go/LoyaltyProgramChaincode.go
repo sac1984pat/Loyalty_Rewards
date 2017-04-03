@@ -20,41 +20,48 @@ var merchantIndexTxStr = "_merchantIndexTxStr"
 type MerchantData struct {
 	MERCHANT_NAME string `json:"MERCHANT_NAME"`
 	MERCHANT_CITY string `json:"MERCHANT_CITY"`
-	MERCHANT_PHONE string `json:"MERCHANT_PHONE"`	
+	MERCHANT_PHONE string `json:"MERCHANT_PHONE"`
 }
 
 
 func (t *LoyaltyProgramChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	
-	var err error
+
+	//var err error
 	// Initialize the chaincode
-	
+
 	fmt.Printf("Deployment of Loyalty Program is completed\n")
-	
-	
+
+
 	// For Merchant Initialization
-	var emptyMerchantDataTxs []MerchantData
-	jsonAsBytes, _ := json.Marshal(emptyMerchantDataTxs)
-	err = stub.PutState(merchantIndexTxStr, jsonAsBytes)
-	if err != nil {
-		return nil, err
-	}
-	
+	// var emptyMerchantDataTxs []MerchantData
+	// jsonAsBytes, _ := json.Marshal(emptyMerchantDataTxs)
+	// err = stub.PutState(merchantIndexTxStr, jsonAsBytes)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
 	return nil, nil
 }
 
 // Add Merchant data in BLockChain
 func (t *LoyaltyProgramChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	
-	if function == "AddMerchant" {		
+
+	if function == "AddMerchant" {
 		return t.AddNewMerchantDetails(stub, args)
+	}else if function == "test"{
+		return t.testFunction(stub, args)
 	}
 	return nil, nil
 }
 
 
+//test function
+func(t *LoyaltyProgramChaincode) testFunction(stub shim.ChaincodeStubInterface,args []string)([]byte,error){
+	fmt.Printf("*********** testFunction called...************************")
+}
+
 func (t *LoyaltyProgramChaincode) AddNewMerchantDetails(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	
+
 	var MerchantDataObj MerchantData
 	var MerchantDataList []MerchantData
 	var err error
@@ -67,18 +74,18 @@ func (t *LoyaltyProgramChaincode) AddNewMerchantDetails(stub shim.ChaincodeStubI
 	MerchantDataObj.MERCHANT_NAME = args[0]
 	MerchantDataObj.MERCHANT_CITY = args[1]
 	MerchantDataObj.MERCHANT_PHONE = args[2]
-	
+
 	fmt.Printf("Input from user:%s\n", MerchantDataObj)
-	
+
 	merchantTxsAsBytes, err := stub.GetState(merchantIndexTxStr)
 	if err != nil {
 		return nil, errors.New("Failed to get consumer Transactions")
 	}
 	json.Unmarshal(merchantTxsAsBytes, &MerchantDataList)
-	
+
 	MerchantDataList = append(MerchantDataList, MerchantDataObj)
 	jsonAsBytes, _ := json.Marshal(MerchantDataList)
-	
+
 	err = stub.PutState(merchantIndexTxStr, jsonAsBytes)
 	if err != nil {
 		return nil, err
@@ -88,7 +95,7 @@ func (t *LoyaltyProgramChaincode) AddNewMerchantDetails(stub shim.ChaincodeStubI
 
 // Query callback representing the query of a chaincode - for Merchant
 func (t *LoyaltyProgramChaincode) Query(stub shim.ChaincodeStubInterface,function string, args []string) ([]byte, error) {
-	
+
 	var MerchantName string // Entities
 	var err error
 	var resAsBytes []byte
@@ -98,20 +105,20 @@ func (t *LoyaltyProgramChaincode) Query(stub shim.ChaincodeStubInterface,functio
 	}
 
 	MerchantName = args[0]
-	
+
 	resAsBytes, err = t.GetMerchantDetails(stub, MerchantName)
-	
+
 	fmt.Printf("Query Response:%s\n", resAsBytes)
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return resAsBytes, nil
 }
 
 func (t *LoyaltyProgramChaincode)  GetMerchantDetails(stub shim.ChaincodeStubInterface, MerchantName string) ([]byte, error) {
-	
+
 	//var requiredObj MerchantData
 	var objFound bool
 	MerchantTxsAsBytes, err := stub.GetState(merchantIndexTxStr)
@@ -123,7 +130,7 @@ func (t *LoyaltyProgramChaincode)  GetMerchantDetails(stub shim.ChaincodeStubInt
 	json.Unmarshal(MerchantTxsAsBytes, &MerchantTxObjects)
 	length := len(MerchantTxObjects)
 	fmt.Printf("Output from chaincode: %s\n", MerchantTxsAsBytes)
-	
+
 	if MerchantName == "" {
 		res, err := json.Marshal(MerchantTxObjects)
 		if err != nil {
@@ -131,7 +138,7 @@ func (t *LoyaltyProgramChaincode)  GetMerchantDetails(stub shim.ChaincodeStubInt
 		}
 		return res, nil
 	}
-	
+
 	objFound = false
 	// iterate
 	for i := 0; i < length; i++ {
@@ -142,7 +149,7 @@ func (t *LoyaltyProgramChaincode)  GetMerchantDetails(stub shim.ChaincodeStubInt
 			objFound = true
 		}
 	}
-	
+
 	if objFound {
 		res, err := json.Marshal(MerchantTxObjects1)
 		if err != nil {
